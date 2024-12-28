@@ -33,5 +33,5 @@ lm = dspy.LM('ollama_chat/llama3.2', api_base='http://localhost:11434', api_key=
 dspy.configure(lm=lm)
 
 draft_article = DraftArticle()
-article = draft_article(topic="A sex scene")
+article = draft_article(topic="A dance scene")
 print(article)
