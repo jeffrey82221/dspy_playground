@@ -24,8 +24,8 @@ class ReorderColumn(dspy.Signature):
     ordered_field_names: List[str] = dspy.OutputField(desc='The ordered input field names that matched with the target field names sementically')
     confidence: float = dspy.OutputField()
 
-classify = dspy.ChainOfThought(ReorderColumn)
-response = classify(
+order = dspy.ChainOfThought(ReorderColumn)
+response = order(
     target_field_names=[
         "年季",
         "收盤價",
@@ -64,3 +64,4 @@ response = classify(
     ]
     )
 print('reorder response:', response)
+
