@@ -1,6 +1,6 @@
 # What is dspy.Signature?
 
-In DSPy, a Signature is a declarative specification that defines the input and output behavior of a module. It acts as a blueprint for tasks assigned to large language models (LLMs), focusing on what needs to be done rather than how it should be achieved. This approach eliminates the need for manually crafting detailed prompts, enabling developers to build modular, efficient, and reproducible LLM applications.
+In DSPy, a Signature is a declarative specification that defines the input and output behavior of a module. It acts as a blueprint for tasks assigned to large language models (LLMs), focusing on what needs to be done rather than how it should be achieved. This approach eliminates the need for manually crafting detailed prompts, enabling developers to build modular, efficient, and reproducible LLM applications. 
 
 ```python
 class ExtractInfo(dspy.Signature):
@@ -58,3 +58,8 @@ results: List[Dict] = dspy.ColBERTv2(url='http://20.102.90.50:2017/wiki17_abstra
 # What is dspy.ReAct?
 
 The `dspy.ReAct` module in DSPy is used to implement ReAct (Reasoning and Acting) agents, which combine reasoning capabilities with tool usage to solve tasks effectively. It is particularly useful for creating agents that can perform multi-step reasoning while interacting with external tools.
+
+
+# What is lm.inspect_history(n=4)? 
+
+You can use it to understand the interaction to the LLM. 
