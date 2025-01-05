@@ -1,7 +1,9 @@
+"""
+For building up agent interaction workflow
+"""
 import abc
-from typing import Any, Dict
-
-
+from typing import Dict
+from typing import Any, Callable
 
 class WorkflowNode:
     """
@@ -21,7 +23,7 @@ class WorkflowNode:
         return len(self._next_nodes) == 0
     
     @abc.abstractmethod
-    def do_branch(self, payload: Any) -> str:
+    def determine_downstream(self, payload: Any) -> str:
         """
         Define the downstream node 
         where the state should switch upon
@@ -42,11 +44,13 @@ class WorkflowController:
     """
     Controlling the operation of the workflow.
     """
-    def __init__(self, start_node: WorkflowNode):
+    def __init__(self, start_node: WorkflowNode, verbose: bool=False, verbose_callback: Callable=lambda x: x):
+        self._verbose = verbose
         self._start_node = start_node
         self._current_node = start_node
+        self._verbose_callback = verbose_callback
 
-    def start(self, payload):
+    def run(self, payload):
         """
         Go from one step to another
         """
@@ -55,69 +59,39 @@ class WorkflowController:
         self._input_payload_records = []
         self._output_payload_records = []
         while not self._current_node.is_end:
-            self._node_records.append(self._current_node)
-            self._input_payload_records.append(payload)
-            payload = self._current_node.process(payload)
-            self._output_payload_records.append(payload)
+            self._operate_node(self._current_node, payload)
             downstreams = self._current_node._next_nodes
-            name = self._current_node.do_branch(payload)
+            name = self._current_node.determine_downstream(payload)
             self._current_node = downstreams[name]
+        self._operate_node(self._current_node, payload)
         return payload
     
+    def _operate_node(self, current_node: WorkflowNode, payload: Dict):
+        if self._verbose:
+            print('[_operate_node] Start', current_node)
+        self._node_records.append(current_node)
+        self._input_payload_records.append(payload)
+        payload = current_node.process(payload)
+        self._record_workflow_in_payload(payload)
+        self._output_payload_records.append(payload)
+        if self._verbose:
+            print('[_operate_node] Show payload data:', self._verbose_callback(payload))
+        if self._verbose:
+            print('[_operate_node] End', current_node)
+
+    
+    def _record_workflow_in_payload(self, payload: Dict):
+        if 'workflow_records' in payload:
+            payload['workflow_records'].append(self._current_node)
+        else:
+            payload['workflow_records'] = [self._current_node]
+
     @property
     def records(self):
         return list(map(lambda x: f'<{x[0].__class__.__name__}: {x[1]}=>{x[2]}>', zip(self._node_records, self._input_payload_records, self._output_payload_records)))
-
 
 class EndNode(WorkflowNode):
     """
     Ending Node
     """
-    
-class IsValid(WorkflowNode):
-    """
-    Invalid nodes
-    """
-    def do_branch(self, payload):
-        if payload == 0:
-            return 'Y'
-        else:
-            return 'N'
-    
-class PlusOne(WorkflowNode):
-    """
-    Simulate the working of GenAI
-    """
-    def process(self, input) -> int:
-        return input + 1
-    
-class TenReach(WorkflowNode):
-    """
-    Ten reach and stop
-    """
-    def do_branch(self, payload):
-        if payload == 10:
-            return 'Y'
-        else:
-            return 'N'
 
-
-
-
-if __name__ == '__main__':
-    end = EndNode()
-    valid_1 = IsValid()
-    plus_one = PlusOne()
-    ten_validate = TenReach()
-    valid_1.attach_downstream('Y', end)
-    valid_1.attach_downstream('N', plus_one)
-    ten_validate.attach_downstream('Y', end)
-    ten_validate.attach_downstream('N', plus_one)
-    plus_one.attach_downstream('next', ten_validate)
-    c = WorkflowController(valid_1)
-    ans = c.start(0)
-    print(ans)
-    print(c.records)
-    ans = c.start(1)
-    print(ans)
-    print(c.records)
